@@ -148,6 +148,7 @@ router.post("/", (req, res) => {
 })
 
 router.get("/check", (req, res) => {
+  console.log(req.session);
   const { applicant } = req.session
   const reportNames = process.env.ONFIDO_REPORT_NAMES.split(",")
   return onfidoClient.check
