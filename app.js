@@ -3,6 +3,8 @@ import express from "express"
 import path from "path"
 import bodyParser from "body-parser"
 import session from "express-session"
+import cookieSession from 'cookie-session';
+
 import cookieParser from "cookie-parser"
 
 import dotenv from "dotenv"
@@ -21,14 +23,20 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cookieParser(cookieSecret))
 
-app.use(
-  session({
-    secret: cookieSecret,
-    resave: true,
-    saveUninitialized: true,
-    cookie: { secure: app.get("env") === "development" ? false : true }
-  })
-)
+// app.use(
+//   session({
+//     secret: cookieSecret,
+//     resave: true,
+//     saveUninitialized: true,
+//     cookie: { secure: app.get("env") === "development" ? false : true }
+//   })
+// )
+
+
+app.use(cookieSession({
+    name: 'session',
+    keys: ['key1', 'key2']
+}));
 
 app.set("views", path.join(__dirname, "/views"))
 app.set("view engine", "pug")
