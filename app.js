@@ -21,14 +21,12 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cookieParser(cookieSecret))
 
-const memoryStore = new session.MemoryStore()
 app.use(
   session({
     secret: cookieSecret,
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: app.get("env") === "development" ? false : true },
-    store: memoryStore
+    cookie: { secure: app.get("env") === "development" ? false : true }
   })
 )
 
