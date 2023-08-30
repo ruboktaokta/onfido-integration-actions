@@ -24,7 +24,7 @@ app.use(cookieParser(cookieSecret))
 app.use(
   session({
     secret: cookieSecret,
-    resave: false,
+    resave: true,
     saveUninitialized: true,
     cookie: { secure: app.get("env") === "development" ? false : true }
   })
