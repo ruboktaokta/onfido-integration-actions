@@ -32,11 +32,17 @@ app.use(cookieParser(cookieSecret))
 //   })
 // )
 
+app.use(
+  cookieSession({
+    name: 'session', // Name of the cookie
+    secret: process.env.COOKIE_SESSION_SECRET, // Replace with your secret key
+    maxAge: 24 * 60 * 60 * 1000, // Session expiration time (1 day)
+    secure: false, // Set to true for HTTPS-only
+    httpOnly: true, // Prevent client-side JavaScript access
+    signed: true, // Enable cookie data encryption
+  })
+);
 
-app.use(cookieSession({
-    name: 'session',
-    keys: ['key1', 'key2']
-}));
 
 app.set("views", path.join(__dirname, "/views"))
 app.set("view engine", "pug")

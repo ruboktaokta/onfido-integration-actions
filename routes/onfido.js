@@ -1,7 +1,6 @@
 import express from "express"
 import  url from "url"
 import path from "path"
-
 import { Onfido, Region } from "@onfido/api"
 import jwt from "jsonwebtoken"
 
@@ -23,14 +22,21 @@ const onfidoClient = new Onfido({
 })
 const router = express.Router()
 
-router.get("/path/:sessionToken", (req, res) => {
+router.get("/path/:sessionToken", async (req, res) => {
   console.log(req.params)
   const query = url.parse(req.url, true).query
   const sessionToken = req.params.sessionToken
   const auth0State = String(query.state)
   req.session.auth0State = auth0State
+  // const payload = jwt.verify(sessionToken, process.env.APP_SECRET, {
+  //   ignoreExpiration: false,
+  //   audience :'',
+  //   issuer :'',
+  //   algorithms :["HS256"]
+  // })
+
   const payload = jwt.verify(sessionToken, process.env.APP_SECRET, {
-    ignoreExpiration: true
+    ignoreExpiration: false
   })
 
   if (!payload.exp) {
@@ -42,7 +48,13 @@ router.get("/path/:sessionToken", (req, res) => {
   req.session.auth0Payload = payload
 
   const { applicant } = payload
-  req.session.applicant = applicant
+  // create a workflow run
+  var workflowRun = await onfidoClient.workflowRun.create( {applicantId: applicant, workflowId : process.env.WORKFLOW_ID} );
+
+  console.log(workflowRun);
+  
+  req.session.applicant = applicant;
+  //create a SDk token and send run id and token to UI
   return onfidoClient.sdkToken
     .generate({
       applicantId: applicant,
@@ -50,7 +62,7 @@ router.get("/path/:sessionToken", (req, res) => {
     })
     .then(sdkToken => {
       res.status(200).render("onfido", {
-        sdkToken
+        sdkToken,workflowRunId : workflowRun.id
       })
     })
     .catch(error => {
@@ -67,9 +79,8 @@ router.get("/", (req, res) => {
   const auth0State = String(query.state)
   req.session.auth0State = auth0State
   const payload = jwt.verify(sessionToken, process.env.APP_SECRET, {
-    ignoreExpiration: true
+    ignoreExpiration: false
   })
-
 
   if (!payload.exp) {
     res.status(403).render("error", {
@@ -108,6 +119,7 @@ router.post("/", (req, res) => {
     return onfidoClient.check
       .find(checkId)
       .then(response => {
+        console.log(response);
         const sessionToken = {
           checkStatus: response.status,
           checkResult: response.result,
@@ -130,6 +142,7 @@ router.post("/", (req, res) => {
     return onfidoClient.check
       .find(checkId)
       .then(response => {
+        console.log(response);
         const sessionToken = {
           checkStatus: response.status,
           checkResult: response.result,
@@ -154,6 +167,7 @@ router.get("/check", (req, res) => {
   return onfidoClient.check
     .create({ applicantId: applicant, reportNames })
     .then(response => {
+      console.log(response);
       req.session.checkId = response.id
       res.status(200).json({ status: response.status })
     })
@@ -167,6 +181,7 @@ router.get("/status", (req, res) => {
   return onfidoClient.check
     .find(checkId)
     .then(response => {
+      console.log(response);
       res.status(200).json({ status: response.status })
     })
     .catch(error => {
