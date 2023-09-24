@@ -37,6 +37,7 @@ router.get("/path/:sessionToken", async (req, res) => {
   // })
 
   // TO DO - make token expiry short!, consider adding a JTI for replay prevention
+  try {
   const payload = jwt.verify(sessionToken, process.env.APP_SECRET, {
     ignoreExpiration: false,
     audience: process.env.SELF_AUD,
@@ -46,7 +47,8 @@ router.get("/path/:sessionToken", async (req, res) => {
 
   if (!payload.exp) {
     res.status(403).render("error", {
-      message: "Your account recovery link has expired! Please go here to re-initiate your account recovery process!"
+      message: "Your account recovery link has expired! Please go here to re-initiate your account recovery process!",
+      url: process.env.OKTA_URL
     })
   }
 
@@ -73,9 +75,18 @@ router.get("/path/:sessionToken", async (req, res) => {
     .catch(error => {
       console.log(error)
       res.status(500).render("error", {
-        message: error
+        message: error,
+        url: process.env.OKTA_URL
       })
     })
+  }
+  catch(e){
+    console.log(e)
+      res.status(401).render("error", {
+        message: "Invalid access!",
+        url: process.env.OKTA_URL
+      })
+  }
 })
 
 
@@ -106,7 +117,8 @@ router.post("/", (req, res) => {
         res.redirect(continueUrl)
       })
       .catch(error => {
-        res.status(500).render("error", { message: error })
+        res.status(500).render("error", { message: error,
+        url: process.env.OKTA_URL})
       })
   } else {
     return onfidoClient.check
@@ -126,7 +138,8 @@ router.post("/", (req, res) => {
         res.redirect(continueUrl)
       })
       .catch(error => {
-        res.status(500).render("error", { message: error })
+        res.status(500).render("error", { message: error,
+          url: process.env.OKTA_URL })
       })
   }
 })
@@ -143,7 +156,8 @@ router.get("/check", (req, res) => {
       res.status(200).json({ status: response.status })
     })
     .catch(error => {
-      res.status(500).json({ message: error })
+      res.status(500).json({ message: error,
+        url: process.env.OKTA_URL})
     })
 })
 
@@ -156,7 +170,8 @@ router.get("/status", (req, res) => {
       res.status(200).json({ status: response.status })
     })
     .catch(error => {
-      res.status(500).json({ message: error })
+      res.status(500).json({ message: error,
+        url: process.env.OKTA_URL})
     })
 })
 

@@ -24,30 +24,10 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 //app.use(cookieParser(cookieSecret))
 
-// app.use(
-//   session({
-//     secret: cookieSecret,
-//     resave: true,
-//     saveUninitialized: true,
-//     cookie: { secure: app.get("env") === "development" ? false : true }
-//   })
-// )
-
-// app.use(
-//   cookieSession({
-//     name: 'session', // Name of the cookie
-//     secret: process.env.COOKIE_SESSION_SECRET, // Replace with your secret key
-//     maxAge: 24 * 60 * 60 * 1000, // Session expiration time (1 day)
-//     secure: false, // Set to true for HTTPS-only
-//     httpOnly: true, // Prevent client-side JavaScript access
-//     signed: true, // Enable cookie data encryption
-//   })
-// );
-
 app.use(sessions({
   cookieName: 'session', // cookie name dictates the key name added to the request object
   secret: process.env.COOKIE_SESSION_SECRET, // should be a large unguessable string
-  duration: .25 * 60 * 60 * 1000, // how long the session will stay valid in ms
+  duration: .15 * 60 * 60 * 1000, // how long the session will stay valid in ms
   cookie: {
     path: '/redirect-rule', // cookie will only be sent to requests under '/api'
     ephemeral: true, // when true, cookie expires when the browser closes
