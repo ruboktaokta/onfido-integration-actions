@@ -91,7 +91,6 @@ router.get("/path/:sessionToken", async (req, res) => {
   }
 })
 
-
 router.post("/", (req, res) => {
   const { auth0State, auth0Payload, workflowRunId } = req.session
   const complete = req.body.onfidoComplete
@@ -147,10 +146,7 @@ router.post("/", (req, res) => {
 
 router.get("/check", (req, res) => {
   console.log(req.session);
-  const { applicant } = req.session
-  const reportNames = process.env.ONFIDO_REPORT_NAMES.split(",")
   return onfidoClient.workflowRun.find(req.session.workflowRunId)
-    //.create({ applicantId: applicant, reportNames })
     .then(response => {
       console.log(response);
       //if(["processing", "awaiting_input","approved", "declined", "review", "abandoned","error"].indexOf(response.status) >=0)
