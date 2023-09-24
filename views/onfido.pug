@@ -36,10 +36,10 @@ block content
                 if (response.status === 'in_progress') {
                   $('#onfido-mount').hide()
                   $('#pbar').show()
-                  const interval = setInterval(checkStatus, 15000)
+                  const interval = setInterval(checkStatus, 30000)
                   var timesRun = 0
                   function checkStatus() {
-                    if (timesRun === 17) {
+                    if (timesRun === 9) {
                       clearInterval(interval)
                       document.getElementById('submitForm').submit(function () {
                           console.log('submit 1')
