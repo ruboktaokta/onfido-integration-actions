@@ -28,6 +28,7 @@ router.get("/path/:sessionToken", async (req, res) => {
   const sessionToken = req.params.sessionToken
   const auth0State = String(query.state)
   req.session.auth0State = auth0State
+
   // const payload = jwt.verify(sessionToken, process.env.APP_SECRET, {
   //   ignoreExpiration: false,
   //   audience :'',
@@ -36,7 +37,7 @@ router.get("/path/:sessionToken", async (req, res) => {
   // })
 
   const payload = jwt.verify(sessionToken, process.env.APP_SECRET, {
-    ignoreExpiration: false
+    ignoreExpiration: true
   })
 
   if (!payload.exp) {
@@ -79,7 +80,7 @@ router.get("/", (req, res) => {
   const auth0State = String(query.state)
   req.session.auth0State = auth0State
   const payload = jwt.verify(sessionToken, process.env.APP_SECRET, {
-    ignoreExpiration: false
+    ignoreExpiration: true
   })
 
   if (!payload.exp) {
@@ -121,6 +122,7 @@ router.post("/", (req, res) => {
       .then(response => {
         console.log(response);
         const sessionToken = {
+          checkId,
           checkStatus: response.status,
           checkResult: response.result,
           applicant: response.applicantId,
@@ -144,6 +146,7 @@ router.post("/", (req, res) => {
       .then(response => {
         console.log(response);
         const sessionToken = {
+          checkId,
           checkStatus: response.status,
           checkResult: response.result,
           ...auth0Payload,
