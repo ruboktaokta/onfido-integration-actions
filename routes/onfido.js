@@ -38,6 +38,7 @@ router.get("/path/:sessionToken", async (req, res) => {
 
   // TO DO - make token expiry short!, consider adding a JTI for replay prevention
   try {
+
   const payload = jwt.verify(sessionToken, process.env.APP_SECRET, {
     ignoreExpiration: false,
     audience: process.env.SELF_AUD,
@@ -47,7 +48,7 @@ router.get("/path/:sessionToken", async (req, res) => {
 
   if (!payload.exp) {
     res.status(403).render("error", {
-      message: "Your account recovery link has expired! Please go here to re-initiate your account recovery process!",
+      message: "Invalid Token! Please go here to re-initiate your account recovery process!",
       url: process.env.OKTA_URL
     })
   }
@@ -61,6 +62,7 @@ router.get("/path/:sessionToken", async (req, res) => {
   console.log(workflowRun);
   
   req.session.applicant = applicant;
+  req.session.workflowRunId = workflowRun.id;
   //create a SDk token and send run id and token to UI
   return onfidoClient.sdkToken
     .generate({
@@ -91,19 +93,18 @@ router.get("/path/:sessionToken", async (req, res) => {
 
 
 router.post("/", (req, res) => {
-  const { auth0State, auth0Payload, checkId } = req.session
+  const { auth0State, auth0Payload, workflowRunId } = req.session
   const complete = req.body.onfidoComplete
   if (complete) {
     //eslint-disable-next-line
     //@ts-ignore
-    return onfidoClient.check
-      .find(checkId)
+    return onfidoClient.workflowRun.find(workflowRunId)
       .then(response => {
         console.log(response);
         const sessionToken = {
-          checkId,
-          checkStatus: response.status,
-          checkResult: response.result,
+          workflowRunId,
+          workflowRunStatus: ["approved", "declined", "review", "abandoned","error"].indexOf(response.status) >=0 ? "complete" : "processing",
+          workflowRunSubStatus: response.status,
           applicant: response.applicantId,
           ...auth0Payload,
           state: auth0State
@@ -121,14 +122,14 @@ router.post("/", (req, res) => {
         url: process.env.OKTA_URL})
       })
   } else {
-    return onfidoClient.check
-      .find(checkId)
+    return onfidoClient.workflowRun.find(workflowRunId)
       .then(response => {
         console.log(response);
         const sessionToken = {
-          checkId,
-          checkStatus: response.status,
-          checkResult: response.result,
+          workflowRunId,
+          workflowRunStatus: ["approved", "declined", "review", "abandoned","error"].indexOf(response.status) >=0 ? "complete" : "processing",
+          workflowRunSubStatus: response.status,
+          applicant: response.applicantId,
           ...auth0Payload,
           state: auth0State
         }
@@ -148,12 +149,13 @@ router.get("/check", (req, res) => {
   console.log(req.session);
   const { applicant } = req.session
   const reportNames = process.env.ONFIDO_REPORT_NAMES.split(",")
-  return onfidoClient.check
-    .create({ applicantId: applicant, reportNames })
+  return onfidoClient.workflowRun.find(req.session.workflowRunId)
+    //.create({ applicantId: applicant, reportNames })
     .then(response => {
       console.log(response);
-      req.session.checkId = response.id
-      res.status(200).json({ status: response.status })
+      //if(["processing", "awaiting_input","approved", "declined", "review", "abandoned","error"].indexOf(response.status) >=0)
+      res.status(200).json({ status: "processing" })
+      
     })
     .catch(error => {
       res.status(500).json({ message: error,
@@ -162,14 +164,17 @@ router.get("/check", (req, res) => {
 })
 
 router.get("/status", (req, res) => {
-  const { checkId } = req.session
-  return onfidoClient.check
-    .find(checkId)
+  console.log(req.session);
+  const { workflowRunId } = req.session
+  return onfidoClient.workflowRun.find(workflowRunId)
     .then(response => {
       console.log(response);
-      res.status(200).json({ status: response.status })
+      if(["processing", "awaiting_input"].indexOf(response.status) >=0)res.status(200).json({ status: "processing" })
+      else  res.status(200).json({ status: "complete" })
+      //res.status(200).json({ status: response.status })
     })
     .catch(error => {
+      console.log(error);
       res.status(500).json({ message: error,
         url: process.env.OKTA_URL})
     })

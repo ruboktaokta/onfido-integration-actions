@@ -33,10 +33,11 @@ block content
                 },
               }
               $.ajax(settings).done(function (response) {
-                if (response.status === 'in_progress') {
+                console.log(response);
+                if (response.status === 'processing') {
                   $('#onfido-mount').hide()
                   $('#pbar').show()
-                  const interval = setInterval(checkStatus, 30000)
+                  const interval = setInterval(checkStatus, 10000)
                   var timesRun = 0
                   function checkStatus() {
                     if (timesRun === 9) {
