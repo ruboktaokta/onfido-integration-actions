@@ -37,7 +37,7 @@ router.get("/path/:sessionToken", async (req, res) => {
   // })
 
   const payload = jwt.verify(sessionToken, process.env.APP_SECRET, {
-    ignoreExpiration: true
+    ignoreExpiration: false
   })
 
   if (!payload.exp) {
@@ -74,42 +74,6 @@ router.get("/path/:sessionToken", async (req, res) => {
     })
 })
 
-router.get("/", (req, res) => {
-  const query = url.parse(req.url, true).query
-  const sessionToken = String(query.session_token)
-  const auth0State = String(query.state)
-  req.session.auth0State = auth0State
-  const payload = jwt.verify(sessionToken, process.env.APP_SECRET, {
-    ignoreExpiration: true
-  })
-
-  if (!payload.exp) {
-    res.status(403).render("error", {
-      message: "Session Token is expired."
-    })
-  }
-
-  req.session.auth0Payload = payload
-
-  const { applicant } = payload
-  req.session.applicant = applicant
-  return onfidoClient.sdkToken
-    .generate({
-      applicantId: applicant,
-      referrer: process.env.ONFIDO_REFERRER_PATTERN
-    })
-    .then(sdkToken => {
-      res.status(200).render("onfido", {
-        sdkToken
-      })
-    })
-    .catch(error => {
-      console.log(error)
-      res.status(500).render("error", {
-        message: error
-      })
-    })
-})
 
 router.post("/", (req, res) => {
   const { auth0State, auth0Payload, checkId } = req.session
