@@ -36,13 +36,17 @@ router.get("/path/:sessionToken", async (req, res) => {
   //   algorithms :["HS256"]
   // })
 
+  // TO DO - make token expiry short!, consider adding a JTI for replay prevention
   const payload = jwt.verify(sessionToken, process.env.APP_SECRET, {
-    ignoreExpiration: false
-  })
+    ignoreExpiration: false,
+    audience: process.env.SELF_AUD,
+    issuer: `${process.env.ISSUER_BASE_URL}/`,
+    algorithms: ["HS256"],
+  });
 
   if (!payload.exp) {
     res.status(403).render("error", {
-      message: "Session Token is expired."
+      message: "Your account recovery link has expired! Please go here to re-initiate your account recovery process!"
     })
   }
 
