@@ -23,7 +23,7 @@ app.use(sessions({
     path: '/redirect-rule',
     ephemeral: true,
     httpOnly: true,
-    secure: process.env.SECURE_COOKIE === "true" ?  true : false,
+    secureProxy : process.env.SECURE_COOKIE === "true" ?  true : false
   }
 }));
 
