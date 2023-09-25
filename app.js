@@ -2,7 +2,7 @@ import express from "express";
 import path from "path";
 import bodyParser from "body-parser";
 import sessions from "client-sessions";
-import { rateLimit } from 'express-rate-limit';
+import rateLimit from 'express-rate-limit';
 import dotenv from "dotenv";
 
 const app = express();
