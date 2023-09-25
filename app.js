@@ -11,8 +11,8 @@ import cookieParser from "cookie-parser"
 import dotenv from "dotenv"
 const __dirname = path.resolve()
 dotenv.config({ path: path.join(__dirname, './.env') })
-
-console.log(process.env);
+const LOG = process.env.DEBUG === "true" ? console.log.bind(console) : function () { };
+LOG(process.env);
 import onfido from "./routes/onfido.js"
 
 //const cookieSecret = process.env.APP_SECRET
@@ -73,5 +73,5 @@ app.use((err, req, res, next) => {
 
 
 app.listen(process.env.PORT || 3000, () => {
-  console.log(`Listening on ${process.env.PORT}`)
+  LOG(`Listening on ${process.env.PORT}`)
 })
