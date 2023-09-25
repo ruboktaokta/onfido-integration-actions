@@ -2,7 +2,6 @@ import express from "express";
 import path from "path";
 import bodyParser from "body-parser";
 import sessions from "client-sessions";
-import rateLimit from 'express-rate-limit';
 import dotenv from "dotenv";
 
 const app = express();
@@ -11,13 +10,7 @@ dotenv.config({ path: path.join(__dirname, './.env') });
 
 const LOG = process.env.DEBUG === "true" ? console.log.bind(console) : () => {};
 
-// Define the rate limit options
-const limiter = rateLimit({
-  windowMs: 60000, // 60 seconds
-  max: process.env.RATE_LIMIT_PER_IP_PER_MIN || 20, // Max requests per IP per 60 seconds
-  message: 'Rate limit exceeded. Please wait and try again.',
-  keyGenerator: (req) => req.ip,
-});
+
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -39,10 +32,8 @@ app.set("view engine", "pug");
 app.use(express.static(path.join(__dirname, "/public")));
 
 import onfido from "./routes/onfido.js";
-const useRateLimiting = process.env.USE_RATE_LIMITING === "true" ? true : false;
 
-if(useRateLimiting) app.use("/redirect-rule", limiter, onfido);
-else app.use("/redirect-rule", onfido);
+app.use("/redirect-rule", onfido);
 
 app.use((req, res, next) => {
   next(new Error("Not Found"));
