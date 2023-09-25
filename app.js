@@ -1,77 +1,62 @@
-
-import express from "express"
-import path from "path"
-import bodyParser from "body-parser"
-import session from "express-session"
-import cookieSession from 'cookie-session';
+import express from "express";
+import path from "path";
+import bodyParser from "body-parser";
 import sessions from "client-sessions";
+import { rateLimit } from 'express-rate-limit';
+import dotenv from "dotenv";
 
-import cookieParser from "cookie-parser"
+const app = express();
+const __dirname = path.resolve();
+dotenv.config({ path: path.join(__dirname, './.env') });
 
-import dotenv from "dotenv"
-const __dirname = path.resolve()
-dotenv.config({ path: path.join(__dirname, './.env') })
-const LOG = process.env.DEBUG === "true" ? console.log.bind(console) : function () { };
-LOG(process.env);
-import onfido from "./routes/onfido.js"
+const LOG = process.env.DEBUG === "true" ? console.log.bind(console) : () => {};
 
-//const cookieSecret = process.env.APP_SECRET
+// Define the rate limit options
+const limiter = rateLimit({
+  windowMs: 60000, // 60 seconds
+  max: process.env.RATE_LIMIT_PER_IP_PER_MIN || 20, // Max requests per IP per 60 seconds
+  message: 'Rate limit exceeded. Please wait and try again.',
+  keyGenerator: (req) => req.ip,
+});
 
-const app = express()
-
-//app.set("trust proxy", "1")
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: false }))
-//app.use(cookieParser(cookieSecret))
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(sessions({
-  cookieName: 'session', // cookie name dictates the key name added to the request object
-  secret: process.env.COOKIE_SESSION_SECRET, // should be a large unguessable string
-  duration: .15 * 60 * 60 * 1000, // how long the session will stay valid in ms
+  cookieName: 'session',
+  secret: process.env.COOKIE_SESSION_SECRET,
+  duration: (process.env.SESSION_DURATION_MINUTES  || 20) * 60 * 1000, // 10 minutes in milliseconds
   cookie: {
-    path: '/redirect-rule', // cookie will only be sent to requests under '/api'
-    ephemeral: true, // when true, cookie expires when the browser closes
-    httpOnly: true, // when true, cookie is not accessible from javascript
-    secure: false // when true, cookie will only be sent over SSL. use key 'secureProxy' instead if you handle SSL not in your node process
+    path: '/redirect-rule',
+    ephemeral: true,
+    httpOnly: true,
+    secure: process.env.SECURE_COOKIE === "true" ?  true : false,
   }
 }));
 
+app.set("views", path.join(__dirname, "/views"));
+app.set("view engine", "pug");
+app.use(express.static(path.join(__dirname, "/public")));
 
-app.set("views", path.join(__dirname, "/views"))
-app.set("view engine", "pug")
-app.use(express.static(path.join(__dirname, "/public")))
+import onfido from "./routes/onfido.js";
+const useRateLimiting = process.env.USE_RATE_LIMITING === "true" ? true : false;
 
-app.use("/redirect-rule", onfido)
+if(useRateLimiting) app.use("/redirect-rule", limiter, onfido);
+else app.use("/redirect-rule", onfido);
 
 app.use((req, res, next) => {
-  next(new Error("Not Found"))
-})
+  next(new Error("Not Found"));
+});
 
-if (app.get("env") === "development") {
-  app.use((err, req, res) => {
-    res.status(500).render("error", {
-      message: err.message,
-      error: err
-    })
-  })
-}
-
-app.use((err, req, res) => {
+const errorMiddleware = (err, req, res, next) => {
   res.status(500).render("error", {
-    message: err.message
-  })
-})
+    message: err.message,
+    error: app.get("env") === "development" ? err : {},
+  });
+};
 
-// Express requires the next function (or specific function signature) to include the 4 arguments: https://github.com/expressjs/generator/issues/78
-// as such, we are telling eslint to ignore the no-unused-vars rule for the error handler middleware
-//eslint-disable-next-line @typescript-eslint/no-unused-vars
-app.use((err, req, res, next) => {
-  res.status(500).render("error", {
-    message: err.message
-  })
-})
-
+app.use(errorMiddleware);
 
 app.listen(process.env.PORT || 3000, () => {
-  LOG(`Listening on ${process.env.PORT}`)
-})
+  LOG(`Listening on ${process.env.PORT}`);
+});

@@ -40,8 +40,8 @@
 .demo-center-text {
     text-align: center;
 }
-.onfido-sdk-ui-Theme-defaultLogo .onfido-sdk-ui-Theme-footer {
-    background-image: url("../img/mgmresorts.png");
+.onfido-sdk-ui-Theme-footer .onfido-sdk-ui-Theme-logo {
+    background-image: url("../img/mgmresorts.png") !important;
 }
 .onfido-sdk-ui-Button-button-primary {
     background-color: #f4eee1 !important;

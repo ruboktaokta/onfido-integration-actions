@@ -72,10 +72,26 @@ block content
                       } else {
                         timesRun++
                       }
+                    }).fail(function (jqXHR, textStatus) {
+                  if (jqXHR.status === 401) {
+                    alert('Your session has expired due to inactivity -  the verification process!');
+                    window.location.reload();
+                  } else {
+                    console.error('Error:', textStatus);
+                    alert('Error while processing!', textStatus)
+                  }
                     })
                   }
                 }
-              })
+              }).fail(function (jqXHR, textStatus) {
+                  if (jqXHR.status === 401) {
+                    alert('Your session has expired due to inactivity. Please restart the verification process!');
+                    window.location.reload();
+                  } else {
+                    console.error('Error:', textStatus);
+                    alert('Error while processing!', textStatus)
+                  }
+            })
             }
           })
         })

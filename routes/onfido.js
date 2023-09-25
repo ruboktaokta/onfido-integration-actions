@@ -1,5 +1,5 @@
 import express from "express"
-import  url from "url"
+import url from "url"
 import path from "path"
 import { Onfido, Region } from "@onfido/api"
 import jwt from "jsonwebtoken"
@@ -14,16 +14,27 @@ const onfidoClient = new Onfido({
     process.env.ONFIDO_REGION === "EU"
       ? Region.EU
       : process.env.ONFIDO_REGION === "US"
-      ? Region.US
-      : process.env.ONFIDO_REGION === "CA"
-      ? Region.CA
-      : Region.EU
+        ? Region.US
+        : process.env.ONFIDO_REGION === "CA"
+          ? Region.CA
+          : Region.EU
 })
 const router = express.Router()
-const onfidoCompleteSubStatuses = ["approved", "declined", "review", "abandoned","error"];
-const onfidoSubStatuses = ["processing", "awaiting_input","approved", "declined", "review", "abandoned","error"]; 
-const LOG = process.env.DEBUG === "true" ? console.log.bind(console) : function () { }; 
+const onfidoCompleteSubStatuses = ["approved", "declined", "review", "abandoned", "error"];
+const onfidoSubStatuses = ["processing", "awaiting_input", "approved", "declined", "review", "abandoned", "error"];
+const LOG = process.env.DEBUG === "true" ? console.log.bind(console) : function () { };
 const LOGERR = console.log;
+
+
+// Check Session Middleware
+const checkSession = (req, res, next) => {
+  if (!req.session || !req.session.auth0State) {
+    return res.status(401).json({ error: 'Session expired or not authenticated' });
+  }
+
+  // Session exists, continue to the next middleware
+  next();
+};
 
 router.get("/path/:sessionToken", async (req, res) => {
   LOG(req.params)
@@ -35,61 +46,58 @@ router.get("/path/:sessionToken", async (req, res) => {
   // TO DO - make token expiry short!, consider adding a JTI for replay prevention
   try {
 
-  const payload = jwt.verify(sessionToken, process.env.APP_SECRET, {
-    ignoreExpiration: false,
-    audience: process.env.SELF_AUD,
-    issuer: `${process.env.ISSUER_BASE_URL}/`,
-    algorithms: ["HS256"],
-  });
+    const payload = jwt.verify(sessionToken, process.env.APP_SECRET, {
+      ignoreExpiration: false,
+      audience: process.env.SELF_AUD,
+      issuer: `${process.env.ISSUER_BASE_URL}/`,
+      algorithms: ["HS256"],
+    });
 
-  
 
-  if (!payload.exp) {
-    res.status(403).render("error", {
-      message: "Invalid attempt!",
+
+    if (!payload.exp) {
+      res.status(403).render("error", {
+        message: "Invalid attempt!",
+        url: process.env.OKTA_URL
+      })
+    }
+
+    req.session.auth0Payload = payload
+
+    const { applicant } = payload
+
+    // create or use a workflow run
+    req.session.applicant = applicant;
+    req.session.workflowRunId = req.session.workflowRunId || (await onfidoClient.workflowRun.create({ applicantId: applicant, workflowId: process.env.WORKFLOW_ID })).id;
+    //create a SDk token and send run id and token to UI
+    return onfidoClient.sdkToken
+      .generate({
+        applicantId: applicant,
+        referrer: process.env.ONFIDO_REFERRER_PATTERN
+      })
+      .then(sdkToken => {
+        res.status(200).render("onfido", {
+          sdkToken, workflowRunId: req.session.workflowRunId
+        })
+      })
+      .catch(error => {
+        LOGERR(error)
+        res.status(500).render("error", {
+          message: error,
+          url: process.env.OKTA_URL
+        })
+      })
+  }
+  catch (e) {
+    LOGERR(e)
+    res.status(401).render("error", {
+      message: "Invalid access!",
       url: process.env.OKTA_URL
     })
   }
-
-  req.session.auth0Payload = payload
-
-  const { applicant } = payload
-  // create a workflow run
-  var workflowRun = await onfidoClient.workflowRun.create( {applicantId: applicant, workflowId : process.env.WORKFLOW_ID} );
-
-  LOG(workflowRun);
-  
-  req.session.applicant = applicant;
-  req.session.workflowRunId = workflowRun.id;
-  //create a SDk token and send run id and token to UI
-  return onfidoClient.sdkToken
-    .generate({
-      applicantId: applicant,
-      referrer: process.env.ONFIDO_REFERRER_PATTERN
-    })
-    .then(sdkToken => {
-      res.status(200).render("onfido", {
-        sdkToken,workflowRunId : workflowRun.id
-      })
-    })
-    .catch(error => {
-      LOGERR(error)
-      res.status(500).render("error", {
-        message: error,
-        url: process.env.OKTA_URL
-      })
-    })
-  }
-  catch(e){
-    LOGERR(e)
-      res.status(401).render("error", {
-        message: "Invalid access!",
-        url: process.env.OKTA_URL
-      })
-  }
 })
 
-router.post("/", (req, res) => {
+router.post("/", checkSession, (req, res) => {
   const { auth0State, auth0Payload, workflowRunId } = req.session
   const complete = req.body.onfidoComplete
   if (complete) {
@@ -98,7 +106,7 @@ router.post("/", (req, res) => {
         LOG(response);
         const sessionToken = {
           workflowRunId,
-          workflowRunStatus: onfidoCompleteSubStatuses.indexOf(response.status) >=0 ? "complete" : "processing",
+          workflowRunStatus: onfidoCompleteSubStatuses.indexOf(response.status) >= 0 ? "complete" : "processing",
           workflowRunSubStatus: response.status,
           applicant: response.applicantId,
           ...auth0Payload,
@@ -114,8 +122,10 @@ router.post("/", (req, res) => {
       })
       .catch(error => {
         LOGERR(error);
-        res.status(500).render("error", { message: error,
-        url: process.env.OKTA_URL})
+        res.status(500).render("error", {
+          message: error,
+          url: process.env.OKTA_URL
+        })
       })
   } else {
     return onfidoClient.workflowRun.find(workflowRunId)
@@ -123,7 +133,7 @@ router.post("/", (req, res) => {
         LOG(response);
         const sessionToken = {
           workflowRunId,
-          workflowRunStatus: onfidoCompleteSubStatuses.indexOf(response.status) >=0 ? "complete" : "processing",
+          workflowRunStatus: onfidoCompleteSubStatuses.indexOf(response.status) >= 0 ? "complete" : "processing",
           workflowRunSubStatus: response.status,
           applicant: response.applicantId,
           ...auth0Payload,
@@ -135,40 +145,45 @@ router.post("/", (req, res) => {
         res.redirect(continueUrl)
       })
       .catch(error => {
-        res.status(500).render("error", { message: error,
-          url: process.env.OKTA_URL })
+        res.status(500).render("error", {
+          message: error,
+          url: process.env.OKTA_URL
+        })
       })
   }
 })
 
-router.get("/check", (req, res) => {
+router.get("/check", checkSession, (req, res) => {
   LOG(req.session);
   return onfidoClient.workflowRun.find(req.session.workflowRunId)
     .then(response => {
       LOG(response);
       res.status(200).json({ status: "processing" })
-      
+
     })
     .catch(error => {
-      res.status(500).json({ message: error,
-        url: process.env.OKTA_URL})
+      res.status(500).json({
+        message: error,
+        url: process.env.OKTA_URL
+      })
     })
 })
 
-router.get("/status", (req, res) => {
+router.get("/status", checkSession, (req, res) => {
   LOG(req.session);
   const { workflowRunId } = req.session
   return onfidoClient.workflowRun.find(workflowRunId)
     .then(response => {
       LOG(response);
-      if(["processing", "awaiting_input"].indexOf(response.status) >=0)res.status(200).json({ status: "processing" })
-      else  res.status(200).json({ status: "complete" })
-      //res.status(200).json({ status: response.status })
+      if (["processing", "awaiting_input"].indexOf(response.status) >= 0) res.status(200).json({ status: "processing" })
+      else res.status(200).json({ status: "complete" })
     })
     .catch(error => {
       LOGERR(error);
-      res.status(500).json({ message: error,
-        url: process.env.OKTA_URL})
+      res.status(500).json({
+        message: error,
+        url: process.env.OKTA_URL
+      })
     })
 })
 
