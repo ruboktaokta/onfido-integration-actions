@@ -46,6 +46,8 @@ router.get("/path/:sessionToken", async (req, res) => {
     algorithms: ["HS256"],
   });
 
+  
+
   if (!payload.exp) {
     res.status(403).render("error", {
       message: "Invalid Token! Please go here to re-initiate your account recovery process!",

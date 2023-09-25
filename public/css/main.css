@@ -1,7 +1,7 @@
 .demo-ribbon {
     width: 100%;
     height: 40vh;
-    background-image: #f4eee1;
+    background: transparent;
     flex-shrink: 0;
 }
 .demo-main {
@@ -41,7 +41,7 @@
     text-align: center;
 }
 .onfido-sdk-ui-Theme-defaultLogo .onfido-sdk-ui-Theme-footer {
-    background-image: url("../img/mgmresortsbg.png");
+    background-image: url("../img/mgmresorts.png");
 }
 .onfido-sdk-ui-Button-button-primary {
     background-color: #f4eee1 !important;
