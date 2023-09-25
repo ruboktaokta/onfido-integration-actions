@@ -68,7 +68,7 @@ router.get("/path/:sessionToken", async (req, res) => {
 
     // create or use a workflow run
     req.session.applicant = applicant;
-    req.session.workflowRunId = req.session.workflowRunId || (await onfidoClient.workflowRun.create({ applicantId: applicant, workflowId: process.env.WORKFLOW_ID })).id;
+    req.session.workflowRunId = (await onfidoClient.workflowRun.create({ applicantId: applicant, workflowId: process.env.WORKFLOW_ID })).id;
     //create a SDk token and send run id and token to UI
     return onfidoClient.sdkToken
       .generate({
