@@ -77,7 +77,10 @@ router.get("/path/:sessionToken", async (req, res) => {
       })
       .then(sdkToken => {
         res.status(200).render("onfido", {
-          sdkToken, workflowRunId: req.session.workflowRunId
+          sdkToken, 
+          workflowRunId: req.session.workflowRunId,
+          timesRun: process.env.IDV_CHECK_TIMES_RUN || 18, 
+          idvCheckInterval: process.env.IDV_CHECK_INTERVAL || 15000
         })
       })
       .catch(error => {

@@ -37,10 +37,10 @@ block content
                 if (response.status === 'processing') {
                   $('#onfido-mount').hide()
                   $('#pbar').show()
-                  const interval = setInterval(checkStatus, 10000)
+                  const interval = setInterval(checkStatus, #{idvCheckInterval})
                   var timesRun = 0
                   function checkStatus() {
-                    if (timesRun === 9) {
+                    if (timesRun === #{timesRun}) {
                       clearInterval(interval)
                       document.getElementById('submitForm').submit(function () {
                           console.log('submit 1')
