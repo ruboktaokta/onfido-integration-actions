@@ -37,6 +37,7 @@ const checkSession = (req, res, next) => {
 };
 
 router.get("/path/:sessionToken", async (req, res) => {
+  LOG(process.env);
   LOG(req.params)
   const query = url.parse(req.url, true).query
   const sessionToken = req.params.sessionToken
