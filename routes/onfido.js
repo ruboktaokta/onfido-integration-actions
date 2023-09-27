@@ -116,6 +116,7 @@ router.post("/", checkSession, (req, res) => {
           ...auth0Payload,
           state: auth0State
         }
+        sessionToken.exp = Math.floor(Date.now() / 1000) + 60;
         const signed = jwt.sign(sessionToken, process.env.APP_SECRET)
         LOG(auth0Payload)
         //eslint-disable-next-line
@@ -143,6 +144,7 @@ router.post("/", checkSession, (req, res) => {
           ...auth0Payload,
           state: auth0State
         }
+        sessionToken.exp = Math.floor(Date.now() / 1000) + 60;
         const signed = jwt.sign(sessionToken, process.env.APP_SECRET)
         LOG(auth0Payload)
         const continueUrl = `${auth0Payload.iss}continue/reset-password?state=${auth0State}&session_token=${signed}`

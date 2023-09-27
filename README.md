@@ -31,17 +31,21 @@ Before you can run this project, ensure you have the following prerequisites ins
    Create a `.env` file in the project root directory and configure the necessary environment variables. You can use the `.env.example` file as a template. Make sure to replace the placeholders with the actual values:
 
    ```dotenv
-    APP_SECRET=...
-    ISSUER_BASE_URL=https://<auth0 tenant or custom domain>
-    PORT=3539
-    ONFIDO_API_TOKEN=<token>
-    ONFIDO_REGION=US
-    ONFIDO_REFERRER_PATTERN=*://*/*
-    WORKFLOW_ID=<asdadads>
-    COOKIE_SESSION_SECRET=...
-    SELF_AUD=onfido
-    OKTA_URL=https://<okta sub domain>.oktapreview.com
-    DEBUG=true
+        ONFIDO_API_TOKEN=
+        SECURE_COOKIE=true
+        SESSION_DURATION_MINUTES=
+        IDV_CHECK_INTERVAL= in ms
+        IDV_CHECK_TIMES_RUN=times to run status check
+        DEBUG=true
+        OKTA_URL=https://<>.okta.com
+        WORKFLOW_ID=onfido workflow id
+        ONFIDO_REGION=region
+        COOKIE_SESSION_SECRET=encryption for cookie
+        APP_SECRET=secret for app
+        ISSUER_BASE_URL=session token issuer
+        PORT=3539
+        ONFIDO_REFERRER_PATTERN=*://*/*
+        SELF_AUD=audience for session token
    ```
 
 4. **Run the Application:**
