@@ -54,8 +54,6 @@ router.get("/path/:sessionToken", async (req, res) => {
       algorithms: ["HS256"],
     });
 
-
-
     if (!payload.exp) {
       res.status(403).render("error", {
         message: "Invalid attempt!",
@@ -103,50 +101,23 @@ router.get("/path/:sessionToken", async (req, res) => {
 
 router.post("/", checkSession, (req, res) => {
   const { auth0State, auth0Payload, workflowRunId } = req.session
-  const complete = req.body.onfidoComplete
-  if (complete) {
+  console.log(req.body);
+  const complete = req.body.onfidoComplete;
+  LOG(complete);
     return onfidoClient.workflowRun.find(workflowRunId)
       .then(response => {
         LOG(response);
         const sessionToken = {
-          workflowRunId,
           workflowRunStatus: onfidoCompleteSubStatuses.indexOf(response.status) >= 0 ? "complete" : "processing",
           workflowRunSubStatus: response.status,
           applicant: response.applicantId,
           ...auth0Payload,
           state: auth0State
         }
+        LOG(sessionToken)
         sessionToken.exp = Math.floor(Date.now() / 1000) + 60;
         const signed = jwt.sign(sessionToken, process.env.APP_SECRET)
-        LOG(auth0Payload)
-        //eslint-disable-next-line
-        //@ts-ignore
-        const continueUrl = `${auth0Payload.iss}continue/reset-password?state=${auth0State}&session_token=${signed}`
-        //const continueUrl = `${auth0Payload.iss}continue?state=${auth0State}`
-        res.redirect(continueUrl)
-      })
-      .catch(error => {
-        LOGERR(error);
-        res.status(500).render("error", {
-          message: error,
-          url: process.env.OKTA_URL
-        })
-      })
-  } else {
-    return onfidoClient.workflowRun.find(workflowRunId)
-      .then(response => {
-        LOG(response);
-        const sessionToken = {
-          workflowRunId,
-          workflowRunStatus: onfidoCompleteSubStatuses.indexOf(response.status) >= 0 ? "complete" : "processing",
-          workflowRunSubStatus: response.status,
-          applicant: response.applicantId,
-          ...auth0Payload,
-          state: auth0State
-        }
-        sessionToken.exp = Math.floor(Date.now() / 1000) + 60;
-        const signed = jwt.sign(sessionToken, process.env.APP_SECRET)
-        LOG(auth0Payload)
+
         const continueUrl = `${auth0Payload.iss}continue/reset-password?state=${auth0State}&session_token=${signed}`
         res.redirect(continueUrl)
       })
@@ -156,11 +127,11 @@ router.post("/", checkSession, (req, res) => {
           url: process.env.OKTA_URL
         })
       })
-  }
+  
 })
 
 router.get("/check", checkSession, (req, res) => {
-  LOG(req.session);
+      LOG(req.session);
   return onfidoClient.workflowRun.find(req.session.workflowRunId)
     .then(response => {
       LOG(response);
