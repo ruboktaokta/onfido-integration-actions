@@ -67,11 +67,11 @@ router.get("/path/:sessionToken", async (req, res) => {
 
     // create or use a workflow run
     req.session.applicant = applicant;
-    req.session.workflowRunId = (await onfidoClient.workflowRun.create({ applicantId: applicant, workflowId: process.env.WORKFLOW_ID })).id;
+    req.session.workflowRunId = (await onfidoClient.workflowRun.create({ applicantId: applicant.id, workflowId: process.env.WORKFLOW_ID })).id;
     //create a SDk token and send run id and token to UI
     return onfidoClient.sdkToken
       .generate({
-        applicantId: applicant,
+        applicantId: applicant.id,
         referrer: process.env.ONFIDO_REFERRER_PATTERN
       })
       .then(sdkToken => {
@@ -118,7 +118,7 @@ router.post("/", checkSession, (req, res) => {
         sessionToken.exp = Math.floor(Date.now() / 1000) + 60;
         const signed = jwt.sign(sessionToken, process.env.APP_SECRET)
 
-        const continueUrl = `${auth0Payload.iss}continue/reset-password?state=${auth0State}&session_token=${signed}`
+        const continueUrl = `${auth0Payload.iss}continue?state=${auth0State}&session_token=${signed}`
         res.redirect(continueUrl)
       })
       .catch(error => {
