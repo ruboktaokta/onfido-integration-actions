@@ -31,23 +31,24 @@ Before you can run this project, ensure you have the following prerequisites ins
    Create a `.env` file in the project root directory and configure the necessary environment variables. You can use the `.env.example` file as a template. Make sure to replace the placeholders with the actual values:
 
    ```dotenv
-        APP_SECRET=
-PORT=3539
-ONFIDO_API_TOKEN=
-ONFIDO_REGION=
-ONFIDO_REFERRER_PATTERN=*://*/*
-WORKFLOW_ID=
-COOKIE_SESSION_SECRET=
-SELF_AUD=onfido
-OKTA_URL=https://iamkrish.oktapreview.com
-ISSUER_BASE_URL=
-DEBUG=true
-SECURE_COOKIE=true
-SESSION_DURATION_MINUTES=15
-SECURE_COOKIE=true
-SESSION_DURATION_MINUTES=30
-IDV_CHECK_INTERVAL=10000
-IDV_CHECK_TIMES_RUN=5
+      APP_SECRET=
+      PORT=3539
+      ONFIDO_API_TOKEN=
+      ONFIDO_REGION=
+      ONFIDO_REFERRER_PATTERN=*://*/*
+      WORKFLOW_ID=
+      COOKIE_SESSION_SECRET=
+      SELF_AUD=onfido
+      OKTA_URL=https://iamkrish.oktapreview.com
+      ISSUER_BASE_URL=
+      DEBUG=true
+      SECURE_COOKIE=true
+      SESSION_DURATION_MINUTES=15
+      SECURE_COOKIE=true
+      SESSION_DURATION_MINUTES=30
+      IDV_CHECK_INTERVAL=10000
+      IDV_CHECK_TIMES_RUN=5
+
    ```
 
 4. **Run the Application:**
