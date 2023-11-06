@@ -39,7 +39,7 @@ Before you can run this project, ensure you have the following prerequisites ins
       WORKFLOW_ID=
       COOKIE_SESSION_SECRET=
       SELF_AUD=onfido
-      OKTA_URL=https://iamkrish.oktapreview.com
+      OKTA_URL=https://test.oktapreview.com
       ISSUER_BASE_URL=
       DEBUG=true
       SECURE_COOKIE=true
