@@ -58,11 +58,11 @@ Before you can run this project, ensure you have the following prerequisites ins
    ```bash
    npm start
    ```
-   The application will start, and you should see a message in the console indicating that it's listening on the specified port (or the default port, 3000).
+   The application will start, and you should see a message in the console indicating that it's listening on the specified port (or the default port, 3539).
 
 5. **Access the Application:**
 
-   Open a web browser and navigate to [http://localhost:3000/redirect-rule](http://localhost:3000/redirect-rule) to access the application.
+   Open a web browser and navigate to [http://localhost:3539/redirect-rule](http://localhost:3539/redirect-rule) to access the application.
 
 ## Project Structure
 
